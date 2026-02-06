@@ -58,13 +58,24 @@ export default function CommandCenter() {
           });
           const data = await res.json();
           
-          // If they sold below 100k, notify the sheet to remove/update
-          if (data.balance < 100000) {
-            await fetch(process.env.NEXT_PUBLIC_GOOGLE_SHEET_URL!, {
-              method: 'POST',
-              body: JSON.stringify({ wallet: log.addr, balance: 0, action: 'DELETE' }),
-            });
-          }
+          // Inside runStrike...
+if (data.balance >= 100000) {
+  setStatus("STRIKE VERIFIED");
+  
+  // SEND TO GOOGLE SHEETS
+  await fetch(process.env.NEXT_PUBLIC_GOOGLE_SHEET_URL!, {
+    method: 'POST',
+    mode: 'no-cors', // <--- ADD THIS LINE
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ wallet: address, balance: data.balance }),
+  });
+
+  // This adds it to the UI immediately
+  setLogs(prev => [{ addr: address, balance: data.balance }, ...prev]);
+  setAddress("");
+}
         } catch (e) {}
       }
     };
